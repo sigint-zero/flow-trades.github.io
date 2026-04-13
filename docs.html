@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow Docs</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg-sidebar: #0d0d0d;
+  --bg-card: #111;
+  --bg-code: #0d1117;
+  --text: #e6e6e6;
+  --text-muted: #888;
+  --text-sidebar: #aaa;
+  --accent: #00d4aa;
+  --accent-dim: rgba(0,212,170,0.1);
+  --border: #1e1e1e;
+  --border-code: #21262d;
+  --code-text: #c9d1d9;
+  --font: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sidebar-w: 260px;
+}
+[data-theme="light"] {
+  --bg: #fff;
+  --bg-sidebar: #f7f8fa;
+  --bg-card: #fff;
+  --bg-code: #f6f8fa;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --text-sidebar: #555;
+  --accent: #00a882;
+  --accent-dim: rgba(0,168,130,0.08);
+  --border: #e5e7eb;
+  --border-code: #d0d7de;
+  --code-text: #24292f;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height:1.7; }
+a { color: var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* Top bar */
+.topbar {
+  position:fixed; top:0; width:100%; height:52px; z-index:200;
+  background: var(--bg); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 20px;
+}
+.topbar-logo { font-weight:700; font-size:16px; color:var(--text); }
+.topbar-logo span { color:var(--accent); }
+.topbar-right { margin-left:auto; display:flex; gap:16px; align-items:center; }
+.topbar-right a { color:var(--text-muted); font-size:13px; }
+.topbar-right a:hover { color:var(--text); text-decoration:none; }
+.hamburger {
+  display:none; background:none; border:none; color:var(--text); font-size:22px;
+  cursor:pointer; margin-right:12px;
+}
+.theme-btn {
+  background:none; border:1px solid var(--border); color:var(--text-muted);
+  padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px;
+}
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Sidebar */
+.sidebar {
+  position:fixed; top:52px; left:0; width:var(--sidebar-w); height:calc(100vh - 52px);
+  background:var(--bg-sidebar); border-right:1px solid var(--border);
+  overflow-y:auto; padding:20px 0; z-index:100;
+}
+.sidebar-section { padding:0 16px; margin-bottom:20px; }
+.sidebar-title {
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px;
+  color:var(--text-muted); margin-bottom:8px; padding:0 8px;
+}
+.sidebar a {
+  display:block; padding:6px 8px; border-radius:6px; font-size:13px;
+  color:var(--text-sidebar); transition:all 0.15s;
+}
+.sidebar a:hover { background:var(--accent-dim); color:var(--accent); text-decoration:none; }
+.sidebar a.active { background:var(--accent-dim); color:var(--accent); font-weight:500; }
+
+/* Main content */
+.main {
+  margin-left:var(--sidebar-w); margin-top:52px; padding:40px 48px 80px;
+  max-width:860px;
+}
+.main h1 { font-size:32px; font-weight:700; margin-bottom:8px; letter-spacing:-0.5px; }
+.main h2 { font-size:22px; font-weight:600; margin-top:48px; margin-bottom:16px; padding-top:24px; border-top:1px solid var(--border); }
+.main h3 { font-size:16px; font-weight:600; margin-top:32px; margin-bottom:8px; }
+.main p { margin-bottom:16px; color:var(--text); }
+.main ul, .main ol { margin:0 0 16px 24px; }
+.main li { margin-bottom:4px; }
+.muted { color:var(--text-muted); }
+
+/* Code */
+code {
+  font-family:var(--mono); font-size:13px; background:var(--bg-code);
+  padding:2px 6px; border-radius:4px; border:1px solid var(--border-code);
+  color:var(--accent);
+}
+pre {
+  background:var(--bg-code); border:1px solid var(--border-code); border-radius:8px;
+  padding:16px 20px; overflow-x:auto; margin:12px 0 20px; line-height:1.5;
+}
+pre code { background:none; border:none; padding:0; color:var(--code-text); font-size:13px; }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; margin:12px 0 24px; font-size:14px; }
+th { text-align:left; font-weight:600; padding:10px 12px; border-bottom:2px solid var(--border); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); }
+td { padding:10px 12px; border-bottom:1px solid var(--border); }
+tr:last-child td { border-bottom:none; }
+
+/* Method badges */
+.method { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; font-family:var(--mono); margin-right:8px; }
+.method-get { background:#1a6334; color:#3fb950; }
+.method-post { background:#3d2e00; color:#d29922; }
+.method-ws { background:#1a2b5e; color:#58a6ff; }
+[data-theme="light"] .method-get { background:#dafbe1; color:#116329; }
+[data-theme="light"] .method-post { background:#fff8c5; color:#6a4c00; }
+[data-theme="light"] .method-ws { background:#ddf4ff; color:#0550ae; }
+
+/* Endpoint card */
+.endpoint {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  padding:20px 24px; margin:16px 0 24px;
+}
+.endpoint-header { font-family:var(--mono); font-size:15px; font-weight:600; margin-bottom:12px; }
+
+/* Mobile */
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); transition:transform 0.25s; width:280px; }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; padding:24px 16px 60px; }
+  .hamburger { display:block; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
+  <a href="index.html" class="topbar-logo"><span>Flow</span> Docs</a>
+  <div class="topbar-right">
+    <a href="index.html">Home</a>
+    <button class="theme-btn" onclick="toggleTheme()">Light</button>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-title">Getting Started</div>
+    <a href="#introduction" class="active">Introduction</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="#configuration">Configuration</a>
+    <a href="#requirements">Requirements</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">API Reference</div>
+    <a href="#api">Overview</a>
+    <a href="#get-quote">GET /quote</a>
+    <a href="#post-swap">POST /swap</a>
+    <a href="#get-health">GET /health</a>
+    <a href="#get-metrics">GET /metrics</a>
+    <a href="#ws-quote">WS /quote-ws</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">Router</div>
+    <a href="#fees">Fee Structure</a>
+    <a href="#router">On-Chain Router</a>
+    <a href="#integrators">Integrators</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">Reference</div>
+    <a href="#dexes">Supported DEXes</a>
+    <a href="#performance">Performance</a>
+    <a href="#errors">Error Codes</a>
+    <a href="#security">Security</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══ INTRODUCTION ═══ -->
+<h1 id="introduction">Introduction</h1>
+<p class="muted">What Flow Trades is, how it works, and why you'd use it.</p>
+
+<h3>What is Flow Trades?</h3>
+<p>Flow Trades is a self-hosted Solana swap API. You run a single binary on your own server, point it at a Geyser node, and it gives you a REST API for quoting and executing token swaps across 19 DEXes — Raydium, Orca, Meteora, PumpFun, and more.</p>
+
+<p>You run it on your own infrastructure, with your own fee collection, fully self-hosted.</p>
+
+<h3>How do users interact with it?</h3>
+<p>The typical flow is two API calls:</p>
+<ol>
+  <li><strong>Quote</strong> — <code>GET /quote</code> with an input token, output token, and amount. Flow finds the best route across all pools and returns the expected output, price impact, and route details.</li>
+  <li><strong>Swap</strong> — <code>POST /swap</code> with the quote and the user's wallet address. Flow builds an unsigned Solana transaction wrapped in the on-chain router (for fee collection) and returns it as base64. The user signs it with their wallet and submits it to the network.</li>
+</ol>
+<p>That's it. Your frontend or bot calls <code>/quote</code>, shows the user what they'll get, then calls <code>/swap</code>, has them sign, and submits. Flow never holds keys or funds — it only builds transactions.</p>
+
+<h3>How does fee collection work?</h3>
+<p>Every swap transaction is wrapped in a CPI to the Flow router program (<code>FLoWxx...UsNqm</code>), an immutable Solana program deployed on mainnet. The router takes a 0.5% fee from the output token after the swap completes and the slippage check passes. 70% of the fee goes to the integrator (you), 30% to the protocol. Fees accumulate in token accounts automatically — SOL swaps collect SOL fees, USDC swaps collect USDC fees, etc.</p>
+<p>The router program's upgrade authority has been permanently burned. Nobody can change the fee rate, treasury wallet, or program logic.</p>
+
+<h3>What do I need to run it?</h3>
+<ul>
+  <li>A <strong>Yellowstone Geyser gRPC</strong> endpoint — either a local validator with the Geyser plugin, or a hosted provider</li>
+  <li>A <strong>Solana RPC</strong> endpoint — for initial pool data and optional simulation</li>
+  <li>That's it. No databases, no Docker, no dependencies. One binary and a config file.</li>
+</ul>
+
+<!-- ═══ QUICK START ═══ -->
+<h2 id="quickstart">Quick Start</h2>
+<p class="muted">Get Flow Trades running in under 5 minutes.</p>
+
+<h3>1. Configure</h3>
+<pre><code># config.toml
+rpc_url = "https://your-solana-rpc.com"
+
+[streaming]
+geyser_endpoint = "http://your-geyser-node:10000"</code></pre>
+
+<h3>2. Run</h3>
+<pre><code>./flow-trades</code></pre>
+<p>Server starts on <code>http://127.0.0.1:8080</code>. Pools discovered automatically from Geyser, persisted to SQLite.</p>
+
+<h3>3. Quote</h3>
+<pre><code>curl "http://localhost:8080/quote?\
+input=So11111111111111111111111111111111111111112&\
+output=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&\
+amount=1000000000"</code></pre>
+
+<h3>4. Swap</h3>
+<pre><code>QUOTE=$(curl -s "http://localhost:8080/quote?input=So111...&output=EPjFW...&amount=1000000000")
+
+curl -X POST http://localhost:8080/swap \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\": \"YOUR_PUBKEY\", \"quote\": $QUOTE}"</code></pre>
+<p>Returns a base64-encoded unsigned <code>VersionedTransaction</code>. Sign with your wallet and submit via <code>sendTransaction</code>.</p>
+
+<!-- ═══ CONFIGURATION ═══ -->
+<h2 id="configuration">Configuration</h2>
+
+<table>
+<tr><th>Option</th><th>Env Var</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>rpc_url</code></td><td><code>RPC_URL</code></td><td><strong>required</strong></td><td>Solana RPC endpoint</td></tr>
+<tr><td><code>geyser_endpoint</code></td><td><code>GEYSER_ENDPOINT</code></td><td>--</td><td>Yellowstone gRPC endpoint</td></tr>
+<tr><td><code>geyser_token</code></td><td><code>GEYSER_TOKEN</code></td><td>--</td><td>gRPC auth token (if required)</td></tr>
+<tr><td><code>listen</code></td><td><code>LISTEN_ADDR</code></td><td><code>127.0.0.1:8080</code></td><td>API listen address</td></tr>
+<tr><td><code>referral_account</code></td><td><code>REFERRAL_ACCOUNT</code></td><td>--</td><td>Your wallet for 70% fee share</td></tr>
+<tr><td><code>pool_db</code></td><td><code>POOL_DB_PATH</code></td><td><code>./pools.db</code></td><td>SQLite pool database path</td></tr>
+<tr><td><code>alt_addresses</code></td><td><code>ALT_ADDRESSES</code></td><td>--</td><td>Address Lookup Tables (comma-separated)</td></tr>
+<tr><td><code>log_level</code></td><td><code>LOG_LEVEL</code></td><td><code>warn</code></td><td>trace, debug, info, warn, error</td></tr>
+</table>
+
+<!-- ═══ REQUIREMENTS ═══ -->
+<h2 id="requirements">Requirements</h2>
+<ul>
+  <li><strong>Yellowstone Geyser gRPC</strong> endpoint (local validator or hosted provider)</li>
+  <li><strong>Solana RPC</strong> endpoint (for companion data + simulation)</li>
+  <li>512MB RAM minimum, 1GB recommended</li>
+  <li>No external databases or dependencies — single binary</li>
+</ul>
+
+<!-- ═══ API OVERVIEW ═══ -->
+<h2 id="api">API Reference</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header"><span class="method method-get">GET</span> /quote</div>
+  <div class="endpoint-header"><span class="method method-post">POST</span> /swap</div>
+  <div class="endpoint-header"><span class="method method-get">GET</span> /health</div>
+  <div class="endpoint-header"><span class="method method-get">GET</span> /metrics</div>
+  <div class="endpoint-header"><span class="method method-get">GET</span> /program-id-to-label</div>
+  <div class="endpoint-header"><span class="method method-ws">WS</span> /quote-ws</div>
+</div>
+
+<!-- ═══ GET /quote ═══ -->
+<h2 id="get-quote"><span class="method method-get">GET</span> /quote</h2>
+<p>Find the best swap route for a token pair.</p>
+
+<h3>Parameters</h3>
+<table>
+<tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>input</code></td><td>string</td><td>Yes</td><td>--</td><td>Input token mint (base58)</td></tr>
+<tr><td><code>output</code></td><td>string</td><td>Yes</td><td>--</td><td>Output token mint (base58)</td></tr>
+<tr><td><code>amount</code></td><td>string</td><td>Yes</td><td>--</td><td>Raw amount in smallest units</td></tr>
+<tr><td><code>slippage</code></td><td>u16</td><td>No</td><td><code>50</code></td><td>Slippage in basis points (50 = 0.5%)</td></tr>
+<tr><td><code>direct_only</code></td><td>bool</td><td>No</td><td><code>true</code></td><td><code>false</code> enables multi-hop routing</td></tr>
+<tr><td><code>dexes</code></td><td>string</td><td>No</td><td>all</td><td>Whitelist DEXes (comma-separated)</td></tr>
+<tr><td><code>exclude</code></td><td>string</td><td>No</td><td>none</td><td>Blacklist DEXes (comma-separated)</td></tr>
+<tr><td><code>mode</code></td><td>string</td><td>No</td><td><code>ExactIn</code></td><td><code>ExactIn</code> or <code>ExactOut</code></td></tr>
+</table>
+
+<h3>Response</h3>
+<pre><code>{
+  "input_token": "So11111111111111111111111111111111111111112",
+  "amount_in": "1000000000",
+  "output_token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "amount_out": "162340000",
+  "minimum_out": "161528300",
+  "mode": "ExactIn",
+  "slippage_bps": 50,
+  "price_impact": "0.12",
+  "routes": [
+    {
+      "pool": {
+        "pool_address": "...",
+        "dex": "Orca",
+        "input_token": "So111...",
+        "output_token": "EPjFW...",
+        "amount_in": "1000000000",
+        "amount_out": "162340000",
+        "fee": "2500000",
+        "fee_token": "So111..."
+      },
+      "percent": 100
+    }
+  ],
+  "platform_fee": {
+    "amount": "811700",
+    "fee_bps": 50,
+    "fee_token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "side": "output"
+  },
+  "slot": 412875000,
+  "quote_time_ms": 0.04
+}</code></pre>
+
+<!-- ═══ POST /swap ═══ -->
+<h2 id="post-swap"><span class="method method-post">POST</span> /swap</h2>
+<p>Build an unsigned versioned transaction from a quote. All swaps routed through the on-chain router.</p>
+
+<h3>Request Body</h3>
+<table>
+<tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>wallet</code></td><td>string</td><td>Yes</td><td>--</td><td>Signer public key (base58)</td></tr>
+<tr><td><code>quote</code></td><td>object</td><td>Yes</td><td>--</td><td>Full response from <code>GET /quote</code></td></tr>
+<tr><td><code>priority_fee</code></td><td>u64</td><td>No</td><td><code>5000</code></td><td>Priority fee in lamports</td></tr>
+<tr><td><code>compute_limit</code></td><td>u32</td><td>No</td><td>auto</td><td>Compute unit limit</td></tr>
+<tr><td><code>simulate</code></td><td>bool</td><td>No</td><td><code>false</code></td><td>Simulate first (returns CU + logs)</td></tr>
+<tr><td><code>tip</code></td><td>object</td><td>No</td><td>--</td><td><code>{ "address": "...", "lamports": 10000 }</code></td></tr>
+</table>
+
+<h3>Response</h3>
+<pre><code>{
+  "transaction": "base64-encoded-unsigned-VersionedTransaction...",
+  "block_height": 412875100,
+  "compute_limit": 400000,
+  "priority_fee": 5000
+}</code></pre>
+
+<!-- ═══ GET /health ═══ -->
+<h2 id="get-health"><span class="method method-get">GET</span> /health</h2>
+<p>Server status, pool counts, stream stats, blockhash age.</p>
+<pre><code>{
+  "status": "ok",
+  "poolCacheSize": 1333,
+  "registrySize": 5787,
+  "poolDbSize": 5787,
+  "streamUpdates": 19754,
+  "streamErrors": 0,
+  "blockhashCacheAgeMs": 200,
+  "lastStreamUpdateMs": 3
+}</code></pre>
+
+<!-- ═══ GET /metrics ═══ -->
+<h2 id="get-metrics"><span class="method method-get">GET</span> /metrics</h2>
+<p>Prometheus exposition format. Counters for quotes, stream updates, errors. Gauges for cache/registry/SQLite sizes.</p>
+
+<!-- ═══ WS /quote-ws ═══ -->
+<h2 id="ws-quote"><span class="method method-ws">WS</span> /quote-ws</h2>
+<p>Push-based quote streaming. Send a subscription, receive quote updates at your interval.</p>
+
+<h3>Subscription Message</h3>
+<pre><code>{
+  "input_mint": "So11111111111111111111111111111111111111112",
+  "output_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "amount": 1000000000,
+  "slippage_bps": 50,
+  "interval_ms": 1000
+}</code></pre>
+<p>Minimum interval: 100ms. Server pushes full <code>QuoteResponse</code> objects at the specified rate.</p>
+
+<!-- ═══ FEES ═══ -->
+<h2 id="fees">Fee Structure</h2>
+
+<table>
+<tr><th>Property</th><th>Value</th></tr>
+<tr><td>Router Program</td><td><code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code></td></tr>
+<tr><td>Platform Fee</td><td>0.5% (50 bps) on output token</td></tr>
+<tr><td>Integrator Share</td><td>70% of fee</td></tr>
+<tr><td>Protocol Share</td><td>30% of fee</td></tr>
+<tr><td>Upgrade Authority</td><td><code>none</code> (immutable)</td></tr>
+</table>
+
+<p>Fees are always taken from the <strong>output token</strong> after the swap completes and slippage is verified. Collected in any SPL token — SOL, USDC, memecoins, Token-2022.</p>
+<p>Treasury + referral ATAs are auto-created on first swap per output mint (~0.002 SOL rent, paid by signer once).</p>
+
+<!-- ═══ ROUTER ═══ -->
+<h2 id="router">On-Chain Router</h2>
+<p>Every <code>POST /swap</code> transaction is wrapped in the flow-router CPI. The router program is <strong>immutable</strong> — upgrade authority has been permanently burned. No one can change the fee rate, treasury, or program logic.</p>
+
+<h3>How It Works</h3>
+<pre><code>User TX -> flow-router::swap
+  |-- Read config PDA (fee, treasury, split)
+  |-- Validate token program (SPL v1 or Token-2022)
+  |-- Execute N sequential DEX CPIs (1-5 hops)
+  |-- Verify final output >= min_amount_out
+  |-- Validate fee account owned by treasury
+  '-- Collect fee from output token</code></pre>
+
+<!-- ═══ INTEGRATORS ═══ -->
+<h2 id="integrators">Integrators</h2>
+<p>Earn <strong>70% of the 0.5% platform fee</strong> on every swap routed through your integration.</p>
+<ol>
+  <li>Contact the admin to get your wallet whitelisted</li>
+  <li>Set <code>referral_account</code> in your <code>config.toml</code></li>
+  <li>Fees accumulate in your wallet's ATAs automatically</li>
+</ol>
+
+<!-- ═══ DEXES ═══ -->
+<h2 id="dexes">Supported DEXes (19)</h2>
+<table>
+<tr><th>#</th><th>DEX</th><th>Type</th></tr>
+<tr><td>1</td><td>Raydium V4</td><td>Legacy AMM</td></tr>
+<tr><td>2</td><td>Raydium CPMM</td><td>Constant Product</td></tr>
+<tr><td>3</td><td>Raydium CLMM</td><td>Concentrated Liquidity</td></tr>
+<tr><td>4</td><td>Raydium LP</td><td>StableSwap</td></tr>
+<tr><td>5</td><td>PumpFun</td><td>Bonding Curve</td></tr>
+<tr><td>6</td><td>PumpFun AMM</td><td>Graduated AMM</td></tr>
+<tr><td>7</td><td>Orca Whirlpool</td><td>Concentrated Liquidity</td></tr>
+<tr><td>8</td><td>Meteora Standard</td><td>Constant Product</td></tr>
+<tr><td>9</td><td>Meteora DLMM</td><td>Dynamic LMM</td></tr>
+<tr><td>10</td><td>Meteora DAMM v2</td><td>Dynamic AMM</td></tr>
+<tr><td>11</td><td>Meteora DBC</td><td>Bonding Curve</td></tr>
+<tr><td>12</td><td>FluxBeam</td><td>SPL Token Swap</td></tr>
+<tr><td>13</td><td>DefiTuna Fusion</td><td>CLMM</td></tr>
+<tr><td>14</td><td>DefiTuna Pools</td><td>Position Manager</td></tr>
+<tr><td>15</td><td>Saros</td><td>SPL Token Swap</td></tr>
+<tr><td>16</td><td>Dooar</td><td>SPL Token Swap</td></tr>
+<tr><td>17</td><td>PancakeSwap</td><td>CLMM</td></tr>
+<tr><td>18</td><td>FlashTrade</td><td>Custom</td></tr>
+<tr><td>19</td><td>Byreal</td><td>CLMM</td></tr>
+</table>
+
+<!-- ═══ PERFORMANCE ═══ -->
+<h2 id="performance">Performance</h2>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Quote latency</td><td><strong>0-block latency</strong></td></tr>
+<tr><td>Quote p99 (1000 iterations)</td><td><strong>47µs</strong></td></tr>
+<tr><td>Concurrent throughput</td><td><strong>29,359 quotes/sec</strong></td></tr>
+<tr><td>Full pipeline (quote -> IX -> TX)</td><td><strong>816µs avg</strong></td></tr>
+<tr><td>Pool discovery rate</td><td>~500 pools/min</td></tr>
+<tr><td>RPC calls (steady state)</td><td><strong>0</strong></td></tr>
+<tr><td>CPU</td><td>&lt;1%</td></tr>
+<tr><td>Memory</td><td>~35MB</td></tr>
+</table>
+
+<!-- ═══ ERRORS ═══ -->
+<h2 id="errors">Error Codes</h2>
+
+<h3>Router Errors (on-chain)</h3>
+<table>
+<tr><th>Code</th><th>Name</th><th>Description</th></tr>
+<tr><td>0</td><td>InvalidInstructionData</td><td>Bad instruction format</td></tr>
+<tr><td>1</td><td>SlippageExceeded</td><td>Output &lt; min_amount_out</td></tr>
+<tr><td>2</td><td>InvalidFeeBps</td><td>Fee &gt; 10000 bps</td></tr>
+<tr><td>3</td><td>BalanceReadFailed</td><td>Token account unreadable</td></tr>
+<tr><td>5</td><td>NotEnoughAccounts</td><td>Missing required accounts</td></tr>
+<tr><td>6</td><td>InvalidAccount</td><td>Wrong owner or discriminator</td></tr>
+<tr><td>7</td><td>AlreadyInitialized</td><td>Config/integrator PDA exists</td></tr>
+<tr><td>8</td><td>Unauthorized</td><td>Not admin or not whitelisted</td></tr>
+</table>
+
+<h3>API Errors</h3>
+<table>
+<tr><th>Status</th><th>When</th></tr>
+<tr><td>400</td><td>Invalid parameters (bad mint, zero amount, same input/output)</td></tr>
+<tr><td>404</td><td>No route found for the given pair</td></tr>
+<tr><td>500</td><td>Router not configured, RPC failure, or internal error</td></tr>
+</table>
+
+<!-- ═══ SECURITY ═══ -->
+<h2 id="security">Security</h2>
+<p>The Flow router smart contract has been audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>.</p>
+<ul>
+  <li>Zero <code>unwrap()</code>, <code>expect()</code>, or <code>panic!()</code> in production code</li>
+  <li>35 explicit validation checks across all instructions</li>
+  <li>Upgrade authority permanently burned — program is immutable</li>
+  <li>Config PDA is write-once — fee rate, treasury, and split cannot be changed</li>
+  <li>All fee account ownership validated against treasury wallet on every swap</li>
+  <li>Token program explicitly validated (SPL Token v1 or Token-2022 only)</li>
+</ul>
+
+</main>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.querySelector('.theme-btn');
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.setAttribute('data-theme', 'light');
+    btn.textContent = 'Dark';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    btn.textContent = 'Light';
+  }
+  localStorage.setItem('theme', html.getAttribute('data-theme'));
+}
+const saved = localStorage.getItem('theme');
+if (saved) {
+  document.documentElement.setAttribute('data-theme', saved);
+  document.querySelector('.theme-btn').textContent = saved === 'dark' ? 'Light' : 'Dark';
+}
+
+// Active sidebar link tracking
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    document.querySelector('.sidebar').classList.remove('open');
+  });
+});
+
+// Scroll spy
+const sections = document.querySelectorAll('h1[id], h2[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  document.querySelectorAll('.sidebar a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>
