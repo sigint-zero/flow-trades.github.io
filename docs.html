@@ -164,6 +164,7 @@ tr:last-child td { border-bottom:none; }
     <a href="#get-health">GET /health</a>
     <a href="#get-metrics">GET /metrics</a>
     <a href="#ws-quote">WS /quote-ws</a>
+    <a href="#ws-swap-stream">WS /swap-stream</a>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-title">Router</div>
@@ -255,6 +256,9 @@ curl -X POST http://localhost:8080/swap \
 <tr><td><code>referral_account</code></td><td><code>REFERRAL_ACCOUNT</code></td><td>--</td><td>Your wallet for 70% fee share</td></tr>
 <tr><td><code>pool_db</code></td><td><code>POOL_DB_PATH</code></td><td><code>./pools.db</code></td><td>SQLite pool database path</td></tr>
 <tr><td><code>alt_addresses</code></td><td><code>ALT_ADDRESSES</code></td><td>--</td><td>Address Lookup Tables (comma-separated)</td></tr>
+<tr><td><code>swap_stream_enabled</code></td><td><code>SWAP_STREAM_ENABLED</code></td><td><code>true</code></td><td>Enable <code>/swap-stream</code> (broadcast hub + parser + SOL oracle)</td></tr>
+<tr><td><code>swap_stream_buffer_size</code></td><td><code>SWAP_STREAM_BUFFER_SIZE</code></td><td><code>8192</code></td><td>Per-subscriber lossy broadcast capacity</td></tr>
+<tr><td><code>sol_price_refresh_secs</code></td><td><code>SOL_PRICE_REFRESH_SECS</code></td><td><code>10</code></td><td>SOL/USD oracle refresh cadence</td></tr>
 <tr><td><code>log_level</code></td><td><code>LOG_LEVEL</code></td><td><code>warn</code></td><td>trace, debug, info, warn, error</td></tr>
 </table>
 
@@ -277,6 +281,7 @@ curl -X POST http://localhost:8080/swap \
   <div class="endpoint-header"><span class="method method-get">GET</span> /metrics</div>
   <div class="endpoint-header"><span class="method method-get">GET</span> /program-id-to-label</div>
   <div class="endpoint-header"><span class="method method-ws">WS</span> /quote-ws</div>
+  <div class="endpoint-header"><span class="method method-ws">WS</span> /swap-stream</div>
 </div>
 
 <!-- ═══ GET /quote ═══ -->
@@ -386,6 +391,102 @@ curl -X POST http://localhost:8080/swap \
 }</code></pre>
 <p>Minimum interval: 100ms. Server pushes full <code>QuoteResponse</code> objects at the specified rate.</p>
 
+<!-- ═══ WS /swap-stream ═══ -->
+<h2 id="ws-swap-stream"><span class="method method-ws">WS</span> /swap-stream</h2>
+<p>Live broadcast of every confirmed DEX swap parsed off the block stream, enriched with native price (output ui per input ui + inverted) and USD price (per output token + total trade size).</p>
+<p class="muted">Distinct from <code>/quote-ws</code> — that streams <em>projected</em> prices for a chosen pair; this streams <em>observed</em> swaps as they confirm on-chain.</p>
+
+<h3>Protocol</h3>
+<ol>
+  <li>Connect to <code>ws://your-host:8080/swap-stream</code>.</li>
+  <li>(Optional) Send a JSON filter as the first frame. Skipping defaults to "match all" after a 5 s grace.</li>
+  <li>Server replies once with <code>{"type":"subscribed"}</code>, then streams <code>{"type":"swap", …}</code> JSON frames.</li>
+  <li>Server emits <code>{"type":"ping"}</code> every 30 s as a keep-alive.</li>
+  <li>Slow consumers see <code>{"type":"lagged","skipped":N}</code> instead of being disconnected — the connection stays open. (Backed by <code>tokio::sync::broadcast</code> — lossy by design so a slow client never blocks the parsing pipeline.)</li>
+</ol>
+
+<h3>Subscribe Filter</h3>
+<pre><code>{
+  "type": "subscribe",
+  "filter": {
+    "dex": ["Raydium V4", "Pumpup Bonding"],
+    "mint": "9U3FcH1Z3vZFHvN5KrkHHkuJSPKKnBBLpPQ1FkezxAai",
+    "pool": "AQxKPt88jGP1DiwRbqweoo74Yi2o3fMTATAbDDA6BVLT",
+    "min_amount_usd": 10.0
+  }
+}</code></pre>
+<p>All filter fields optional and AND'd together. <code>dex</code> matches any of the listed labels (see <a href="#dexes">Supported DEXes</a>). <code>mint</code> matches a swap's input <em>or</em> output. <code>min_amount_usd</code> drops swaps whose <code>amount_usd</code> is null or below the threshold.</p>
+
+<h3>Wire Format</h3>
+<pre><code>{
+  "type": "swap",
+  "signature": "5xY...",
+  "slot": 412341234,
+  "block_time": 1745000000,
+  "dex": "Pumpup Bonding",
+  "pool": "AQxKPt88jGP1DiwRbqweoo74Yi2o3fMTATAbDDA6BVLT",
+  "user": "7AakHWVQ42d1FyaG7pqvE9ArmhWUpcpvd4yhKKd2dBnt",
+  "input":  { "mint": "So11...", "amount": "1000000",     "decimals": 9, "ui_amount": "0.001"   },
+  "output": { "mint": "9U3F...", "amount": "24637903819", "decimals": 6, "ui_amount": "24637.9" },
+  "price_native":          "24637903.82",
+  "price_native_inverted": "0.0000000406",
+  "price_usd":             "0.00000647",
+  "amount_usd":            "0.16"
+}</code></pre>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td><code>signature</code></td><td>Solana transaction signature (base58)</td></tr>
+<tr><td><code>slot</code></td><td>Slot the swap landed in</td></tr>
+<tr><td><code>block_time</code></td><td>Unix epoch seconds (RPC-provided; nullable)</td></tr>
+<tr><td><code>dex</code></td><td>Human-readable DEX label (matches <code>/program-id-to-label</code>)</td></tr>
+<tr><td><code>pool</code></td><td>Pool address (or <code>pool_sol_account</code> for bonding curves)</td></tr>
+<tr><td><code>user</code></td><td>Fee payer of the underlying tx — the user who did the swap</td></tr>
+<tr><td><code>input.amount</code></td><td>Atomic units, decimal string (avoids JSON-number precision loss)</td></tr>
+<tr><td><code>input.ui_amount</code></td><td><code>amount / 10^decimals</code> formatted as a decimal string</td></tr>
+<tr><td><code>price_native</code></td><td>Output ui per input ui (output amount the user got, divided by what they paid)</td></tr>
+<tr><td><code>price_native_inverted</code></td><td>Input ui per output ui</td></tr>
+<tr><td><code>price_usd</code></td><td>USD per output token (one-sided). <code>null</code> when neither side is a quote mint.</td></tr>
+<tr><td><code>amount_usd</code></td><td>Total trade size in USD. <code>null</code> when neither side is a quote mint.</td></tr>
+</table>
+
+<h3>USD Enrichment</h3>
+<ul>
+  <li><strong>USDC, USDT, PYUSD</strong> are treated as $1.00.</li>
+  <li><strong>SOL</strong> is priced via the in-process oracle: Binance public ticker (primary), DexScreener (fallback). Refreshed at startup and then every <code>--sol-price-refresh-secs</code> (default 10 s).</li>
+  <li>When neither side is SOL nor a stable mint, <code>price_usd</code> and <code>amount_usd</code> are <code>null</code>. No external lookup is attempted, by design (zero deps, self-hosted).</li>
+</ul>
+
+<h3>Node.js Example</h3>
+<pre><code>import WebSocket from "ws";
+
+const ws = new WebSocket("ws://localhost:8080/swap-stream");
+
+ws.on("open", () =&gt; ws.send(JSON.stringify({
+  type: "subscribe",
+  filter: { min_amount_usd: 10 }
+})));
+
+ws.on("message", (raw) =&gt; {
+  const msg = JSON.parse(raw);
+  if (msg.type === "swap") {
+    console.log(
+      `${msg.dex} ${msg.input.ui_amount} ${msg.input.mint.slice(0,4)}... ` +
+      `-&gt; ${msg.output.ui_amount} ${msg.output.mint.slice(0,4)}... ` +
+      `$${msg.amount_usd}`
+    );
+  } else if (msg.type === "ping") {
+    ws.send(JSON.stringify({ type: "pong" }));
+  } else if (msg.type === "lagged") {
+    console.warn(`stream lagged: ${msg.skipped} swaps dropped for slow consumer`);
+  }
+});</code></pre>
+
+<h3>Disabling</h3>
+<p>Set <code>--swap-stream-enabled false</code> (or <code>SWAP_STREAM_ENABLED=false</code>) to disable the broadcast hub, parser, and SOL/USD oracle entirely. Saves a small amount of memory and the periodic background HTTP fetch.</p>
+
+<h3>Verified throughput</h3>
+<p class="muted">A 20-minute mainnet soak streamed <strong>340,613 swaps</strong> at <strong>283.84 swaps/sec sustained</strong> with <strong>99.1% USD coverage</strong>, zero broadcast lag, zero reconnects, and zero consumer errors. Server stayed at 16.6% CPU and ~300 MB RSS with no leak.</p>
+
 <!-- ═══ FEES ═══ -->
 <h2 id="fees">Fee Structure</h2>
 
@@ -424,7 +525,7 @@ curl -X POST http://localhost:8080/swap \
 </ol>
 
 <!-- ═══ DEXES ═══ -->
-<h2 id="dexes">Supported DEXes (19)</h2>
+<h2 id="dexes">Supported DEXes (21 pool types)</h2>
 <table>
 <tr><th>#</th><th>DEX</th><th>Type</th></tr>
 <tr><td>1</td><td>Raydium V4</td><td>Legacy AMM</td></tr>
@@ -446,7 +547,10 @@ curl -X POST http://localhost:8080/swap \
 <tr><td>17</td><td>PancakeSwap</td><td>CLMM</td></tr>
 <tr><td>18</td><td>FlashTrade</td><td>Custom</td></tr>
 <tr><td>19</td><td>Byreal</td><td>CLMM</td></tr>
+<tr><td>20</td><td>Pumpup AMM</td><td>Constant Product (post-graduation)</td></tr>
+<tr><td>21</td><td>Pumpup Bonding</td><td>Bonding Curve (pre-graduation, native SOL)</td></tr>
 </table>
+<p class="muted">Plus <strong>OnChain Labs DEX V2</strong> (<code>proVF4...</code>) — aggregator router into 80+ private MM venues. Discovery-only: pool addresses behind it are registered against their underlying DEXes by the block scanner; we do not quote or execute against the aggregator program itself.</p>
 
 <!-- ═══ PERFORMANCE ═══ -->
 <h2 id="performance">Performance</h2>

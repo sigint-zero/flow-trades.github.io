@@ -163,7 +163,7 @@ footer {
 <section class="hero">
   <div class="hero-content">
     <h1>Self-hosted <span>Solana</span> swap API</h1>
-    <p>Direct AMM execution across 19 DEXes. Geyser-native streaming. 0-block quote latency. Zero RPC on the hot path. On-chain fee enforcement with an immutable router program.</p>
+    <p>Direct AMM execution across 21 pool types. Geyser-native streaming. 0-block quote latency. Zero RPC on the hot path. Live <code style="color:var(--accent);font-family:var(--mono);font-size:0.95em;">/swap-stream</code> WebSocket broadcasting every confirmed DEX swap with native + USD prices. On-chain fee enforcement with an immutable router program.</p>
 
     <div class="hero-stats">
       <div class="stat">
@@ -171,12 +171,12 @@ footer {
         <div class="stat-label">Quote Latency</div>
       </div>
       <div class="stat">
-        <div class="stat-value">19</div>
-        <div class="stat-label">DEXes</div>
+        <div class="stat-value">21</div>
+        <div class="stat-label">Pool Types</div>
       </div>
       <div class="stat">
-        <div class="stat-value">0</div>
-        <div class="stat-label">RPC Calls (Hot Path)</div>
+        <div class="stat-value">280/s</div>
+        <div class="stat-label">Swap Stream Rate</div>
       </div>
     </div>
 
@@ -218,9 +218,14 @@ amount=1000000000"
       <p>Dual-channel Geyser discovery — account stream + block stream. SQLite persistence for instant restart.</p>
     </div>
     <div class="feature-card">
+      <div class="feature-icon">&#128225;</div>
+      <h3>Live Swap Stream</h3>
+      <p><code>WS /swap-stream</code> broadcasts every confirmed DEX swap with native + USD prices. Filter by DEX, mint, pool, or trade size. 283 swaps/sec sustained on mainnet.</p>
+    </div>
+    <div class="feature-card">
       <div class="feature-icon">&#128736;</div>
       <h3>Single Binary</h3>
-      <p>21MB Linux binary. No Docker, no databases, no runtime dependencies. Just config.toml and go.</p>
+      <p>~23MB Linux binary. No Docker, no databases, no runtime dependencies. Just config.toml and go.</p>
     </div>
   </div>
 </section>
@@ -232,7 +237,7 @@ amount=1000000000"
 </section>
 
 <footer>
-  Flow Trades v0.1.0-beta &mdash; Router: FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm
+  Flow Trades v0.3.0 &mdash; Router: FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm
   <br>Smart contract audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>
 </footer>
 
