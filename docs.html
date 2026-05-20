@@ -143,6 +143,7 @@ tr:last-child td { border-bottom:none; }
   <a href="index.html" class="topbar-logo"><span>Flow</span> Docs</a>
   <div class="topbar-right">
     <a href="index.html">Home</a>
+    <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">Source</a>
     <a href="https://t.me/+3BPRvJoUvlViMzg1" target="_blank" rel="noopener" title="Telegram" style="display:flex;align-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
     <button class="theme-btn" onclick="toggleTheme()">Light</button>
   </div>
@@ -178,6 +179,7 @@ tr:last-child td { border-bottom:none; }
     <a href="#performance">Performance</a>
     <a href="#errors">Error Codes</a>
     <a href="#security">Security</a>
+    <a href="#source">Source Code</a>
   </div>
 </aside>
 
@@ -188,9 +190,11 @@ tr:last-child td { border-bottom:none; }
 <p class="muted">What Flow Trades is, how it works, and why you'd use it.</p>
 
 <h3>What is Flow Trades?</h3>
-<p>Flow Trades is a self-hosted Solana swap API. You run a single binary on your own server, point it at a Geyser node, and it gives you a REST API for quoting and executing token swaps across 19 DEXes — Raydium, Orca, Meteora, PumpFun, and more.</p>
+<p>Flow Trades is a self-hosted Solana swap API. You run a single binary on your own server, point it at a Geyser node, and it gives you a REST API for quoting and executing token swaps across <strong>21 pool types</strong> on <strong>20 DEX programs</strong> — Raydium, Orca, Meteora, PumpFun, Pumpup, and more.</p>
 
 <p>You run it on your own infrastructure, with your own fee collection, fully self-hosted.</p>
+
+<p>Full Rust source is published at <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">trueoriginlabs/flow-trades-solana-source</a>. The shipped binary is built from that repo unchanged — audit it, fork it, or build it yourself.</p>
 
 <h3>How do users interact with it?</h3>
 <p>The typical flow is two API calls:</p>
@@ -485,7 +489,7 @@ ws.on("message", (raw) =&gt; {
 <p>Set <code>--swap-stream-enabled false</code> (or <code>SWAP_STREAM_ENABLED=false</code>) to disable the broadcast hub, parser, and SOL/USD oracle entirely. Saves a small amount of memory and the periodic background HTTP fetch.</p>
 
 <h3>Verified throughput</h3>
-<p class="muted">A 20-minute mainnet soak streamed <strong>340,613 swaps</strong> at <strong>283.84 swaps/sec sustained</strong> with <strong>99.1% USD coverage</strong>, zero broadcast lag, zero reconnects, and zero consumer errors. Server stayed at 16.6% CPU and ~300 MB RSS with no leak.</p>
+<p class="muted">A 20-minute mainnet sample streamed <strong>340,613 swaps</strong> at <strong>283.84 swaps/sec sustained</strong> with <strong>99.1% USD coverage</strong>, zero broadcast lag, zero reconnects, and zero consumer errors. Server held steady at 16.6% CPU and ~300 MB RSS.</p>
 
 <!-- ═══ FEES ═══ -->
 <h2 id="fees">Fee Structure</h2>
@@ -601,6 +605,17 @@ ws.on("message", (raw) =&gt; {
   <li>All fee account ownership validated against treasury wallet on every swap</li>
   <li>Token program explicitly validated (SPL Token v1 or Token-2022 only)</li>
 </ul>
+
+<!-- ═══ SOURCE CODE ═══ -->
+<h2 id="source">Source Code</h2>
+<p>The full Rust source for the Flow Trades server lives at <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-trades-solana-source</a>.</p>
+<p>The shipped binary in <a href="https://github.com/trueoriginlabs/flow-trades-binary/releases" target="_blank" rel="noopener">flow-trades-binary/releases</a> is built from that repo. You can:</p>
+<ul>
+  <li><strong>Audit it</strong> — 62 source files, ~20K lines of Rust, 561 unit tests + an extensive E2E suite</li>
+  <li><strong>Fork it</strong> — run your own variant on your own infrastructure</li>
+  <li><strong>Build it</strong> — <code>cargo build --release</code> against the published <code>Cargo.lock</code> reproduces the released binary</li>
+</ul>
+<p>The on-chain router program (immutable, audited) is referenced as <code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code> throughout the codebase.</p>
 
 </main>
 
