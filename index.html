@@ -34,6 +34,103 @@ body {
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* Animated mesh background — drifting blurred color blobs + grain overlay.
+   Pattern: Cursor.com / Resend / Linear — mesh + noise for depth + vignette
+   so the effect focuses on the hero. Deterministic starting frame:
+   keyframes are hand-composed so 0% renders the same curated layout on
+   every refresh. All-CSS, GPU-friendly, no JS, no canvas. */
+.mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  /* Soft vignette — mesh fades toward edges so it doesn't compete with
+     the features section below. */
+  mask-image: radial-gradient(ellipse 95% 75% at 50% 30%, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 95% 75% at 50% 30%, #000 55%, transparent 100%);
+}
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  will-change: transform;
+}
+.mesh-blob.b1 {
+  width: 620px; height: 620px;
+  background: var(--accent);
+  top: -180px; left: -160px;
+  opacity: 0.48;
+  animation: drift1 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+.mesh-blob.b2 {
+  width: 540px; height: 540px;
+  background: #4dc7c2;
+  top: 18%; right: -200px;
+  opacity: 0.38;
+  animation: drift2 41s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+.mesh-blob.b3 {
+  width: 700px; height: 700px;
+  background: #1aa67f;
+  bottom: -260px; left: 30%;
+  opacity: 0.32;
+  animation: drift3 47s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+/* Fourth, smaller, faster blob — adds visual depth + breaks the loop
+   perception (relatively-prime period vs. the other three). */
+.mesh-blob.b4 {
+  width: 320px; height: 320px;
+  background: #6fe3d0;
+  top: 55%; left: 8%;
+  opacity: 0.22;
+  filter: blur(80px);
+  animation: drift4 29s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+[data-theme="light"] .mesh-blob.b1 { opacity: 0.30; }
+[data-theme="light"] .mesh-blob.b2 { opacity: 0.22; }
+[data-theme="light"] .mesh-blob.b3 { opacity: 0.20; }
+[data-theme="light"] .mesh-blob.b4 { opacity: 0.16; }
+
+/* Deterministic starting frames — every refresh begins at this hand-picked
+   composition (the 0% keyframe), then loops back to it. */
+@keyframes drift1 {
+  0%, 100% { transform: translate(12vw, 6vh)   scale(1.05); }
+  33%      { transform: translate(28vw, 18vh)  scale(1.12); }
+  66%      { transform: translate(-4vw, 32vh)  scale(0.95); }
+}
+@keyframes drift2 {
+  0%, 100% { transform: translate(-10vw, 4vh)  scale(1.00); }
+  50%      { transform: translate(-34vw, 22vh) scale(1.15); }
+}
+@keyframes drift3 {
+  0%, 100% { transform: translate(-8vw, -12vh) scale(1.02); }
+  40%      { transform: translate(-20vw, -28vh) scale(1.10); }
+  80%      { transform: translate(20vw, -8vh)  scale(0.92); }
+}
+@keyframes drift4 {
+  0%, 100% { transform: translate(6vw, -4vh)   scale(1.00); }
+  50%      { transform: translate(18vw, -18vh) scale(1.18); }
+}
+
+/* SVG fractal-noise grain. Hides gradient banding + adds tactile depth.
+   Tileable via stitchTiles='stitch'. ~3% opacity is the sweet spot. */
+.mesh-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+[data-theme="light"] .mesh-grain { opacity: 0.06; mix-blend-mode: multiply; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-blob { animation: none !important; }
 }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -41,8 +138,11 @@ a:hover { text-decoration: underline; }
 /* Nav */
 nav {
   position: fixed; top: 0; width: 100%; z-index: 100;
-  background: var(--bg); border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 10, 0.72); border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+[data-theme="light"] nav {
+  background: rgba(250, 250, 250, 0.78);
 }
 .nav-inner {
   max-width: 1200px; margin: 0 auto; padding: 0 24px;
@@ -65,7 +165,8 @@ nav {
 /* Hero */
 .hero {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: var(--bg-hero); text-align: center; padding: 120px 24px 80px;
+  background: transparent; text-align: center; padding: 120px 24px 80px;
+  position: relative;
 }
 .hero-content { max-width: 700px; }
 .hero h1 {
@@ -147,6 +248,14 @@ footer {
 </style>
 </head>
 <body>
+
+<div class="mesh-bg" aria-hidden="true">
+  <div class="mesh-blob b1"></div>
+  <div class="mesh-blob b2"></div>
+  <div class="mesh-blob b3"></div>
+  <div class="mesh-blob b4"></div>
+  <div class="mesh-grain"></div>
+</div>
 
 <nav>
   <div class="nav-inner">
