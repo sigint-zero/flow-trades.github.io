@@ -143,8 +143,8 @@ tr:last-child td { border-bottom:none; }
   <a href="index.html" class="topbar-logo"><span>Flow</span> Docs</a>
   <div class="topbar-right">
     <a href="index.html">Home</a>
-    <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">Source</a>
-      <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">Router</a>
+    <a href="https://github.com/sigint-zero/flow-trades-solana" target="_blank" rel="noopener">Source</a>
+      <a href="https://github.com/sigint-zero/flow-router-solana" target="_blank" rel="noopener">Router</a>
     <a href="https://t.me/+3BPRvJoUvlViMzg1" target="_blank" rel="noopener" title="Telegram" style="display:flex;align-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
     <button class="theme-btn" onclick="toggleTheme()">Light</button>
   </div>
@@ -192,10 +192,10 @@ tr:last-child td { border-bottom:none; }
 <li><code>POST /swap</code> — unsigned transaction (v0 or v1) for the user to sign</li>
 <li><code>WS /swap-stream</code> — every confirmed DEX swap, with prices</li>
 </ul>
-<p>Source: <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">flow-trades-solana</a> (server) and <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a> (on-chain router). Both MIT.</p>
+<p>Source: <a href="https://github.com/sigint-zero/flow-trades-solana" target="_blank" rel="noopener">flow-trades-solana</a> (server) and <a href="https://github.com/sigint-zero/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a> (on-chain router). Both MIT.</p>
 
 <h2 id="quickstart">Quick Start</h2>
-<pre><code>git clone https://github.com/trueoriginlabs/flow-trades-solana.git
+<pre><code>git clone https://github.com/sigint-zero/flow-trades-solana.git
 cd flow-trades-solana
 cargo build --release</code></pre>
 <pre><code># config.toml
@@ -305,7 +305,7 @@ curl "http://localhost:8080/quote?input=So11111111111111111111111111111111111111
 <p>The server reads the fee from the router named by <code>ROUTER_PROGRAM_ID</code> and reports it in every quote's <code>platform_fee</code>.</p>
 
 <h2 id="router">On-Chain Router</h2>
-<p>Source: <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a>. One instruction runs 1–5 DEX legs as CPIs, checks the final output against <code>min_amount_out</code>, and collects the fee with <code>TransferChecked</code> if one is configured.</p>
+<p>Source: <a href="https://github.com/sigint-zero/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a>. One instruction runs 1–5 DEX legs as CPIs, checks the final output against <code>min_amount_out</code>, and collects the fee with <code>TransferChecked</code> if one is configured.</p>
 <table>
 <tr><th>Generation</th><th>Program</th><th>Fee</th><th>Notes</th></tr>
 <tr><td>First</td><td><code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code></td><td>50 bps, 70/30</td><td>immutable; plain <code>Transfer</code>, so Token-2022 mints with extensions cannot be traded through it; audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a></td></tr>
@@ -365,8 +365,8 @@ curl "http://localhost:8080/quote?input=So11111111111111111111111111111111111111
 
 <h2 id="source">Source Code</h2>
 <ul>
-<li><a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-trades-solana</a> — server. <code>cargo build --release</code>, <code>cargo test --lib</code></li>
-<li><a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-router-solana</a> — router. <code>cargo test</code>, <code>cargo build-sbf</code></li>
+<li><a href="https://github.com/sigint-zero/flow-trades-solana" target="_blank" rel="noopener">github.com/sigint-zero/flow-trades-solana</a> — server. <code>cargo build --release</code>, <code>cargo test --lib</code></li>
+<li><a href="https://github.com/sigint-zero/flow-router-solana" target="_blank" rel="noopener">github.com/sigint-zero/flow-router-solana</a> — router. <code>cargo test</code>, <code>cargo build-sbf</code></li>
 </ul>
 </main>
 
