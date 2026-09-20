@@ -1,0 +1,32 @@
+# flow-trades — machine-readable summary
+
+what: self-hosted Solana swap API (quotes + unsigned transactions) and its on-chain router
+license: MIT
+docs: https://flow-trades.github.io/docs.html
+source (server): https://github.com/trueoriginlabs/flow-trades-solana
+source (router): https://github.com/trueoriginlabs/flow-router-solana
+contact: https://t.me/+3BPRvJoUvlViMzg1
+
+endpoints (default 127.0.0.1:8080):
+  GET  /quote?input=<mint>&output=<mint>&amount=<raw>[&slippage=50][&direct_only=false]
+  POST /swap        body: { wallet, quote, tx_version?: 0|1, simulate?: bool }
+  GET  /health
+  GET  /metrics
+  GET  /program-id-to-label
+  WS   /quote-ws
+  WS   /swap-stream
+
+quoted venues: Raydium CPMM, Raydium CLMM, Raydium LaunchLab, pump.fun AMM, Orca Whirlpool,
+  PancakeSwap, DefiTuna Fusion, Meteora DAMM v2, Meteora Standard, Saros, Dooar
+streamed only: Raydium V4, pump.fun bonding, Meteora DLMM, Meteora DBC, FluxBeam
+stale: FlashTrade, Pumpup, DefiTuna Pools
+
+router: every swap is a CPI into flow-router (1-5 DEX hops, one min_amount_out check,
+  optional output-token fee from the router's config; 0 = no fee)
+first-generation router program: FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm (immutable, 50 bps)
+second generation: flow-router-solana (TransferChecked, configurable fee, upgradeable)
+
+performance: warm /quote 0.1-0.5 ms end to end; quote engine 50 us direct / 70 us routed per 300 pools;
+  /swap build 0.5-1.6 ms cached; ~110 swaps/slot on /swap-stream
+
+keys: the server never holds keys; transactions are returned unsigned

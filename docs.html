@@ -143,7 +143,8 @@ tr:last-child td { border-bottom:none; }
   <a href="index.html" class="topbar-logo"><span>Flow</span> Docs</a>
   <div class="topbar-right">
     <a href="index.html">Home</a>
-    <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">Source</a>
+    <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">Source</a>
+      <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">Router</a>
     <a href="https://t.me/+3BPRvJoUvlViMzg1" target="_blank" rel="noopener" title="Telegram" style="display:flex;align-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
     <button class="theme-btn" onclick="toggleTheme()">Light</button>
   </div>
@@ -184,439 +185,189 @@ tr:last-child td { border-bottom:none; }
 </aside>
 
 <main class="main">
-
-<!-- ═══ INTRODUCTION ═══ -->
 <h1 id="introduction">Introduction</h1>
-<p class="muted">What Flow Trades is, how it works, and why you'd use it.</p>
-
-<h3>What is Flow Trades?</h3>
-<p>Flow Trades is a self-hosted Solana swap API. You run a single binary on your own server, point it at a Geyser node, and it gives you a REST API for quoting and executing token swaps across <strong>21 pool types</strong> on <strong>20 DEX programs</strong> — Raydium, Orca, Meteora, PumpFun, Pumpup, and more.</p>
-
-<p>You run it on your own infrastructure, with your own fee collection, fully self-hosted.</p>
-
-<p>Full Rust source is published at <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">trueoriginlabs/flow-trades-solana-source</a>. The shipped binary is built from that repo unchanged — audit it, fork it, or build it yourself.</p>
-
-<h3>How do users interact with it?</h3>
-<p>The typical flow is two API calls:</p>
-<ol>
-  <li><strong>Quote</strong> — <code>GET /quote</code> with an input token, output token, and amount. Flow finds the best route across all pools and returns the expected output, price impact, and route details.</li>
-  <li><strong>Swap</strong> — <code>POST /swap</code> with the quote and the user's wallet address. Flow builds an unsigned Solana transaction wrapped in the on-chain router (for fee collection) and returns it as base64. The user signs it with their wallet and submits it to the network.</li>
-</ol>
-<p>That's it. Your frontend or bot calls <code>/quote</code>, shows the user what they'll get, then calls <code>/swap</code>, has them sign, and submits. Flow never holds keys or funds — it only builds transactions.</p>
-
-<h3>How does fee collection work?</h3>
-<p>Every swap transaction is wrapped in a CPI to the Flow router program (<code>FLoWxx...UsNqm</code>), an immutable Solana program deployed on mainnet. The router takes a 0.5% fee from the output token after the swap completes and the slippage check passes. 70% of the fee goes to the integrator (you), 30% to the protocol. Fees accumulate in token accounts automatically — SOL swaps collect SOL fees, USDC swaps collect USDC fees, etc.</p>
-<p>The router program's upgrade authority has been permanently burned. Nobody can change the fee rate, treasury wallet, or program logic.</p>
-
-<h3>What do I need to run it?</h3>
+<p>flow-trades is a self-hosted Solana swap API. One Rust binary: it discovers pools, prices them with each venue's own arithmetic, and returns unsigned transactions that settle through the on-chain flow-router. It never holds keys or funds.</p>
 <ul>
-  <li>A <strong>Yellowstone Geyser gRPC</strong> endpoint — either a local validator with the Geyser plugin, or a hosted provider</li>
-  <li>A <strong>Solana RPC</strong> endpoint — for initial pool data and optional simulation</li>
-  <li>That's it. No databases, no Docker, no dependencies. One binary and a config file.</li>
+<li><code>GET /quote</code> — best route and expected output</li>
+<li><code>POST /swap</code> — unsigned transaction (v0 or v1) for the user to sign</li>
+<li><code>WS /swap-stream</code> — every confirmed DEX swap, with prices</li>
 </ul>
+<p>Source: <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">flow-trades-solana</a> (server) and <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a> (on-chain router). Both MIT.</p>
 
-<!-- ═══ QUICK START ═══ -->
 <h2 id="quickstart">Quick Start</h2>
-<p class="muted">Get Flow Trades running in under 5 minutes.</p>
-
-<h3>0. Download</h3>
-<p>Grab the latest binary from <a href="https://github.com/trueoriginlabs/flow-trades-binary/releases" target="_blank" rel="noopener">GitHub Releases</a>.</p>
-<pre><code>chmod +x flow-trades</code></pre>
-
-<h3>1. Configure</h3>
+<pre><code>git clone https://github.com/trueoriginlabs/flow-trades-solana.git
+cd flow-trades-solana
+cargo build --release</code></pre>
 <pre><code># config.toml
 rpc_url = "https://your-solana-rpc.com"
-
 [streaming]
-geyser_endpoint = "http://your-geyser-node:10000"</code></pre>
+geyser_endpoint = "http://your-geyser-node:10000"   # optional</code></pre>
+<pre><code>./target/release/flow-trades
+curl "http://localhost:8080/quote?input=So11111111111111111111111111111111111111112&amp;output=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&amp;amount=1000000000"</code></pre>
+<p>Without a Geyser endpoint the server streams blocks over RPC <code>blockSubscribe</code>; same features, slightly higher latency.</p>
 
-<h3>2. Run</h3>
-<pre><code>./flow-trades</code></pre>
-<p>Server starts on <code>http://127.0.0.1:8080</code>. Pools discovered automatically from Geyser, persisted to SQLite.</p>
-
-<h3>3. Quote</h3>
-<pre><code>curl "http://localhost:8080/quote?\
-input=So11111111111111111111111111111111111111112&\
-output=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&\
-amount=1000000000"</code></pre>
-
-<h3>4. Swap</h3>
-<pre><code>QUOTE=$(curl -s "http://localhost:8080/quote?input=So111...&output=EPjFW...&amount=1000000000")
-
-curl -X POST http://localhost:8080/swap \
-  -H "Content-Type: application/json" \
-  -d "{\"wallet\": \"YOUR_PUBKEY\", \"quote\": $QUOTE}"</code></pre>
-<p>Returns a base64-encoded unsigned <code>VersionedTransaction</code>. Sign with your wallet and submit via <code>sendTransaction</code>.</p>
-
-<!-- ═══ CONFIGURATION ═══ -->
 <h2 id="configuration">Configuration</h2>
-
 <table>
-<tr><th>Option</th><th>Env Var</th><th>Default</th><th>Description</th></tr>
-<tr><td><code>rpc_url</code></td><td><code>RPC_URL</code></td><td><strong>required</strong></td><td>Solana RPC endpoint</td></tr>
-<tr><td><code>geyser_endpoint</code></td><td><code>GEYSER_ENDPOINT</code></td><td>--</td><td>Yellowstone gRPC endpoint</td></tr>
-<tr><td><code>geyser_token</code></td><td><code>GEYSER_TOKEN</code></td><td>--</td><td>gRPC auth token (if required)</td></tr>
-<tr><td><code>listen</code></td><td><code>LISTEN_ADDR</code></td><td><code>127.0.0.1:8080</code></td><td>API listen address</td></tr>
-<tr><td><code>referral_account</code></td><td><code>REFERRAL_ACCOUNT</code></td><td>--</td><td>Your wallet for 70% fee share</td></tr>
-<tr><td><code>pool_db</code></td><td><code>POOL_DB_PATH</code></td><td><code>./pools.db</code></td><td>SQLite pool database path</td></tr>
-<tr><td><code>alt_addresses</code></td><td><code>ALT_ADDRESSES</code></td><td>--</td><td>Address Lookup Tables (comma-separated)</td></tr>
-<tr><td><code>swap_stream_enabled</code></td><td><code>SWAP_STREAM_ENABLED</code></td><td><code>true</code></td><td>Enable <code>/swap-stream</code> (broadcast hub + parser + SOL oracle)</td></tr>
-<tr><td><code>swap_stream_buffer_size</code></td><td><code>SWAP_STREAM_BUFFER_SIZE</code></td><td><code>8192</code></td><td>Per-subscriber lossy broadcast capacity</td></tr>
-<tr><td><code>sol_price_refresh_secs</code></td><td><code>SOL_PRICE_REFRESH_SECS</code></td><td><code>10</code></td><td>SOL/USD oracle refresh cadence</td></tr>
-<tr><td><code>log_level</code></td><td><code>LOG_LEVEL</code></td><td><code>warn</code></td><td>trace, debug, info, warn, error</td></tr>
+<tr><th>Option</th><th>Env</th><th>Default</th><th>Purpose</th></tr>
+<tr><td><code>rpc_url</code></td><td><code>RPC_URL</code></td><td><strong>required</strong></td><td>Solana RPC</td></tr>
+<tr><td><code>geyser_endpoint</code></td><td><code>GEYSER_ENDPOINT</code></td><td>--</td><td>Yellowstone gRPC, optional</td></tr>
+<tr><td><code>geyser_token</code></td><td><code>GEYSER_TOKEN</code></td><td>--</td><td>gRPC auth token</td></tr>
+<tr><td><code>listen</code></td><td><code>LISTEN_ADDR</code></td><td><code>127.0.0.1:8080</code></td><td>API address</td></tr>
+<tr><td><code>router_program_id</code></td><td><code>ROUTER_PROGRAM_ID</code></td><td>first-generation router</td><td>Router to wrap swaps with</td></tr>
+<tr><td><code>referral_account</code></td><td><code>REFERRAL_ACCOUNT</code></td><td>--</td><td>Integrator wallet for the referral fee share</td></tr>
+<tr><td><code>alt_addresses</code></td><td><code>ALT_ADDRESSES</code></td><td>--</td><td>Address lookup tables for v0 transactions</td></tr>
+<tr><td><code>pool_db</code></td><td><code>POOL_DB_PATH</code></td><td><code>./pools.db</code></td><td>SQLite pool registry</td></tr>
+<tr><td><code>swap_stream_enabled</code></td><td><code>SWAP_STREAM_ENABLED</code></td><td><code>true</code></td><td><code>/swap-stream</code> on/off</td></tr>
+<tr><td><code>log_level</code></td><td><code>LOG_LEVEL</code></td><td><code>warn</code></td><td>trace … error</td></tr>
 </table>
+<p>Priority: CLI flags &gt; env vars &gt; <code>config.toml</code> &gt; defaults.</p>
 
-<!-- ═══ REQUIREMENTS ═══ -->
 <h2 id="requirements">Requirements</h2>
 <ul>
-  <li><strong>Yellowstone Geyser gRPC</strong> endpoint (local validator or hosted provider)</li>
-  <li><strong>Solana RPC</strong> endpoint (for companion data + simulation)</li>
-  <li>512MB RAM minimum, 1GB recommended</li>
-  <li>No external databases or dependencies — single binary</li>
+<li>Solana RPC endpoint</li>
+<li>Yellowstone Geyser gRPC endpoint, optional</li>
+<li>1 GB RAM recommended; Rust toolchain to build</li>
 </ul>
 
-<!-- ═══ API OVERVIEW ═══ -->
 <h2 id="api">API Reference</h2>
-
 <div class="endpoint">
-  <div class="endpoint-header"><span class="method method-get">GET</span> /quote</div>
-  <div class="endpoint-header"><span class="method method-post">POST</span> /swap</div>
-  <div class="endpoint-header"><span class="method method-get">GET</span> /health</div>
-  <div class="endpoint-header"><span class="method method-get">GET</span> /metrics</div>
-  <div class="endpoint-header"><span class="method method-get">GET</span> /program-id-to-label</div>
-  <div class="endpoint-header"><span class="method method-ws">WS</span> /quote-ws</div>
-  <div class="endpoint-header"><span class="method method-ws">WS</span> /swap-stream</div>
+<div class="endpoint-header"><span class="method method-get">GET</span> /quote</div>
+<div class="endpoint-header"><span class="method method-post">POST</span> /swap</div>
+<div class="endpoint-header"><span class="method method-get">GET</span> /health</div>
+<div class="endpoint-header"><span class="method method-get">GET</span> /metrics</div>
+<div class="endpoint-header"><span class="method method-get">GET</span> /program-id-to-label</div>
+<div class="endpoint-header"><span class="method method-ws">WS</span> /quote-ws</div>
+<div class="endpoint-header"><span class="method method-ws">WS</span> /swap-stream</div>
 </div>
 
-<!-- ═══ GET /quote ═══ -->
 <h2 id="get-quote"><span class="method method-get">GET</span> /quote</h2>
-<p>Find the best swap route for a token pair.</p>
-
-<h3>Parameters</h3>
 <table>
-<tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
-<tr><td><code>input</code></td><td>string</td><td>Yes</td><td>--</td><td>Input token mint (base58)</td></tr>
-<tr><td><code>output</code></td><td>string</td><td>Yes</td><td>--</td><td>Output token mint (base58)</td></tr>
-<tr><td><code>amount</code></td><td>string</td><td>Yes</td><td>--</td><td>Raw amount in smallest units</td></tr>
-<tr><td><code>slippage</code></td><td>u16</td><td>No</td><td><code>50</code></td><td>Slippage in basis points (50 = 0.5%)</td></tr>
-<tr><td><code>direct_only</code></td><td>bool</td><td>No</td><td><code>true</code></td><td><code>false</code> enables multi-hop routing</td></tr>
-<tr><td><code>dexes</code></td><td>string</td><td>No</td><td>all</td><td>Whitelist DEXes (comma-separated)</td></tr>
-<tr><td><code>exclude</code></td><td>string</td><td>No</td><td>none</td><td>Blacklist DEXes (comma-separated)</td></tr>
-<tr><td><code>mode</code></td><td>string</td><td>No</td><td><code>ExactIn</code></td><td><code>ExactIn</code> or <code>ExactOut</code></td></tr>
+<tr><th>Parameter</th><th>Required</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>input</code></td><td>yes</td><td>--</td><td>input mint</td></tr>
+<tr><td><code>output</code></td><td>yes</td><td>--</td><td>output mint</td></tr>
+<tr><td><code>amount</code></td><td>yes</td><td>--</td><td>raw amount, smallest units</td></tr>
+<tr><td><code>slippage</code></td><td>no</td><td><code>50</code></td><td>basis points</td></tr>
+<tr><td><code>direct_only</code></td><td>no</td><td><code>true</code></td><td><code>false</code> allows 2- and 3-hop routes</td></tr>
+<tr><td><code>dexes</code> / <code>exclude</code></td><td>no</td><td>--</td><td>DEX label allow / deny list</td></tr>
 </table>
-
-<h3>Response</h3>
 <pre><code>{
-  "input_token": "So11111111111111111111111111111111111111112",
-  "amount_in": "1000000000",
-  "output_token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  "amount_out": "162340000",
-  "minimum_out": "161528300",
-  "mode": "ExactIn",
-  "slippage_bps": 50,
-  "price_impact": "0.12",
-  "routes": [
-    {
-      "pool": {
-        "pool_address": "...",
-        "dex": "Orca",
-        "input_token": "So111...",
-        "output_token": "EPjFW...",
-        "amount_in": "1000000000",
-        "amount_out": "162340000",
-        "fee": "2500000",
-        "fee_token": "So111..."
-      },
-      "percent": 100
-    }
-  ],
-  "platform_fee": {
-    "amount": "811700",
-    "fee_bps": 50,
-    "fee_token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    "side": "output"
-  },
-  "slot": 412875000,
-  "quote_time_ms": 0.04
+  "input_token": "So111…", "output_token": "EPjFW…",
+  "amount_in": "1000000000", "amount_out": "162340000", "minimum_out": "161528300",
+  "slippage_bps": 50, "price_impact": "0.12",
+  "routes": [ { "pool": { "pool_address": "…", "dex": "Orca", "amount_in": "1000000000", "amount_out": "162340000", "fee": "40000" }, "percent": 100 } ],
+  "platform_fee": { "amount": "0", "fee_bps": 0, "fee_token": "EPjFW…", "side": "output" },
+  "quote_time_ms": 0.05
 }</code></pre>
+<p><code>amount_out</code> is the DEX output before the router fee. On multi-hop routes each later hop is quoted on the previous hop's guaranteed output, so the quote is what the route delivers.</p>
 
-<!-- ═══ POST /swap ═══ -->
 <h2 id="post-swap"><span class="method method-post">POST</span> /swap</h2>
-<p>Build an unsigned versioned transaction from a quote. All swaps routed through the on-chain router.</p>
-
-<h3>Request Body</h3>
 <table>
-<tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
-<tr><td><code>wallet</code></td><td>string</td><td>Yes</td><td>--</td><td>Signer public key (base58)</td></tr>
-<tr><td><code>quote</code></td><td>object</td><td>Yes</td><td>--</td><td>Full response from <code>GET /quote</code></td></tr>
-<tr><td><code>priority_fee</code></td><td>u64</td><td>No</td><td><code>5000</code></td><td>Priority fee in lamports</td></tr>
-<tr><td><code>compute_limit</code></td><td>u32</td><td>No</td><td>auto</td><td>Compute unit limit</td></tr>
-<tr><td><code>simulate</code></td><td>bool</td><td>No</td><td><code>false</code></td><td>Simulate first (returns CU + logs)</td></tr>
-<tr><td><code>tip</code></td><td>object</td><td>No</td><td>--</td><td><code>{ "address": "...", "lamports": 10000 }</code></td></tr>
+<tr><th>Field</th><th>Required</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>wallet</code></td><td>yes</td><td>--</td><td>signer public key</td></tr>
+<tr><td><code>quote</code></td><td>yes</td><td>--</td><td>the <code>/quote</code> response</td></tr>
+<tr><td><code>tx_version</code></td><td>no</td><td><code>0</code></td><td><code>1</code> = transaction format v1 (4,096 B, no lookup tables); use when a v0 build is rejected as too large</td></tr>
+<tr><td><code>simulate</code></td><td>no</td><td><code>false</code></td><td>simulate and return CU + logs</td></tr>
+<tr><td><code>priority_fee</code></td><td>no</td><td><code>5000</code></td><td>lamports</td></tr>
+<tr><td><code>compute_limit</code></td><td>no</td><td>auto</td><td>compute units</td></tr>
+<tr><td><code>tip</code></td><td>no</td><td>--</td><td><code>{ "address": "…", "lamports": 10000 }</code></td></tr>
 </table>
+<pre><code>{ "transaction": "base64…", "tx_version": 0, "block_height": 412875100, "compute_limit": 400000, "priority_fee": 5000 }</code></pre>
+<p>Sign the transaction with the wallet and submit it with <code>sendTransaction</code>.</p>
 
-<h3>Response</h3>
-<pre><code>{
-  "transaction": "base64-encoded-unsigned-VersionedTransaction...",
-  "block_height": 412875100,
-  "compute_limit": 400000,
-  "priority_fee": 5000
-}</code></pre>
-
-<!-- ═══ GET /health ═══ -->
 <h2 id="get-health"><span class="method method-get">GET</span> /health</h2>
-<p>Server status, pool counts, stream stats, blockhash age.</p>
-<pre><code>{
-  "status": "ok",
-  "poolCacheSize": 1333,
-  "registrySize": 5787,
-  "poolDbSize": 5787,
-  "streamUpdates": 19754,
-  "streamErrors": 0,
-  "blockhashCacheAgeMs": 200,
-  "lastStreamUpdateMs": 3
-}</code></pre>
+<pre><code>{ "status": "ok", "poolCacheSize": 2352, "registrySize": 25031, "streamUpdates": 2919, "streamErrors": 0,
+  "blockhashCacheAgeMs": 398, "lastStreamUpdateMs": 65,
+  "router": { "programId": "…", "feeBps": 0, "layout": "TransferChecked" } }</code></pre>
 
-<!-- ═══ GET /metrics ═══ -->
 <h2 id="get-metrics"><span class="method method-get">GET</span> /metrics</h2>
-<p>Prometheus exposition format. Counters for quotes, stream updates, errors. Gauges for cache/registry/SQLite sizes.</p>
+<p>Prometheus format: quotes served, stream updates and errors, cache, registry and database sizes.</p>
 
-<!-- ═══ WS /quote-ws ═══ -->
 <h2 id="ws-quote"><span class="method method-ws">WS</span> /quote-ws</h2>
-<p>Push-based quote streaming. Send a subscription, receive quote updates at your interval.</p>
+<pre><code>{ "input_mint": "So111…", "output_mint": "EPjFW…", "amount": 1000000000, "slippage_bps": 50, "interval_ms": 1000 }</code></pre>
+<p>Server pushes a full quote at the interval (minimum 100 ms).</p>
 
-<h3>Subscription Message</h3>
-<pre><code>{
-  "input_mint": "So11111111111111111111111111111111111111112",
-  "output_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  "amount": 1000000000,
-  "slippage_bps": 50,
-  "interval_ms": 1000
-}</code></pre>
-<p>Minimum interval: 100ms. Server pushes full <code>QuoteResponse</code> objects at the specified rate.</p>
-
-<!-- ═══ WS /swap-stream ═══ -->
 <h2 id="ws-swap-stream"><span class="method method-ws">WS</span> /swap-stream</h2>
-<p>Live broadcast of every confirmed DEX swap parsed off the block stream, enriched with native price (output ui per input ui + inverted) and USD price (per output token + total trade size).</p>
-<p class="muted">Distinct from <code>/quote-ws</code> — that streams <em>projected</em> prices for a chosen pair; this streams <em>observed</em> swaps as they confirm on-chain.</p>
+<p>Every confirmed DEX swap parsed from blocks, with native and USD prices. Optional first frame:</p>
+<pre><code>{ "type": "subscribe", "filter": { "dex": ["PumpFun AMM"], "mint": "…", "pool": "…", "min_amount_usd": 10.0 } }</code></pre>
+<pre><code>{ "type": "swap", "signature": "…", "slot": 412341234, "dex": "PumpFun AMM", "pool": "…", "user": "…",
+  "input":  { "mint": "So111…", "amount": "1000000", "decimals": 9, "ui_amount": "0.001" },
+  "output": { "mint": "…", "amount": "24637903819", "decimals": 6, "ui_amount": "24637.9" },
+  "price_native": "24637903.82", "price_usd": "0.00000647", "amount_usd": "0.16" }</code></pre>
+<p>Frames: <code>subscribed</code> once, <code>swap</code>, <code>ping</code> every 30 s, <code>lagged</code> when a slow consumer drops messages. USDC, USDT and PYUSD count as $1; SOL comes from a built-in oracle; other pairs have <code>null</code> USD fields.</p>
 
-<h3>Protocol</h3>
-<ol>
-  <li>Connect to <code>ws://your-host:8080/swap-stream</code>.</li>
-  <li>(Optional) Send a JSON filter as the first frame. Skipping defaults to "match all" after a 5 s grace.</li>
-  <li>Server replies once with <code>{"type":"subscribed"}</code>, then streams <code>{"type":"swap", …}</code> JSON frames.</li>
-  <li>Server emits <code>{"type":"ping"}</code> every 30 s as a keep-alive.</li>
-  <li>Slow consumers see <code>{"type":"lagged","skipped":N}</code> instead of being disconnected — the connection stays open. (Backed by <code>tokio::sync::broadcast</code> — lossy by design so a slow client never blocks the parsing pipeline.)</li>
-</ol>
-
-<h3>Subscribe Filter</h3>
-<pre><code>{
-  "type": "subscribe",
-  "filter": {
-    "dex": ["Raydium V4", "Pumpup Bonding"],
-    "mint": "9U3FcH1Z3vZFHvN5KrkHHkuJSPKKnBBLpPQ1FkezxAai",
-    "pool": "AQxKPt88jGP1DiwRbqweoo74Yi2o3fMTATAbDDA6BVLT",
-    "min_amount_usd": 10.0
-  }
-}</code></pre>
-<p>All filter fields optional and AND'd together. <code>dex</code> matches any of the listed labels (see <a href="#dexes">Supported DEXes</a>). <code>mint</code> matches a swap's input <em>or</em> output. <code>min_amount_usd</code> drops swaps whose <code>amount_usd</code> is null or below the threshold.</p>
-
-<h3>Wire Format</h3>
-<pre><code>{
-  "type": "swap",
-  "signature": "5xY...",
-  "slot": 412341234,
-  "block_time": 1745000000,
-  "dex": "Pumpup Bonding",
-  "pool": "AQxKPt88jGP1DiwRbqweoo74Yi2o3fMTATAbDDA6BVLT",
-  "user": "7AakHWVQ42d1FyaG7pqvE9ArmhWUpcpvd4yhKKd2dBnt",
-  "input":  { "mint": "So11...", "amount": "1000000",     "decimals": 9, "ui_amount": "0.001"   },
-  "output": { "mint": "9U3F...", "amount": "24637903819", "decimals": 6, "ui_amount": "24637.9" },
-  "price_native":          "24637903.82",
-  "price_native_inverted": "0.0000000406",
-  "price_usd":             "0.00000647",
-  "amount_usd":            "0.16"
-}</code></pre>
-<table>
-<tr><th>Field</th><th>Description</th></tr>
-<tr><td><code>signature</code></td><td>Solana transaction signature (base58)</td></tr>
-<tr><td><code>slot</code></td><td>Slot the swap landed in</td></tr>
-<tr><td><code>block_time</code></td><td>Unix epoch seconds (RPC-provided; nullable)</td></tr>
-<tr><td><code>dex</code></td><td>Human-readable DEX label (matches <code>/program-id-to-label</code>)</td></tr>
-<tr><td><code>pool</code></td><td>Pool address (or <code>pool_sol_account</code> for bonding curves)</td></tr>
-<tr><td><code>user</code></td><td>Fee payer of the underlying tx — the user who did the swap</td></tr>
-<tr><td><code>input.amount</code></td><td>Atomic units, decimal string (avoids JSON-number precision loss)</td></tr>
-<tr><td><code>input.ui_amount</code></td><td><code>amount / 10^decimals</code> formatted as a decimal string</td></tr>
-<tr><td><code>price_native</code></td><td>Output ui per input ui (output amount the user got, divided by what they paid)</td></tr>
-<tr><td><code>price_native_inverted</code></td><td>Input ui per output ui</td></tr>
-<tr><td><code>price_usd</code></td><td>USD per output token (one-sided). <code>null</code> when neither side is a quote mint.</td></tr>
-<tr><td><code>amount_usd</code></td><td>Total trade size in USD. <code>null</code> when neither side is a quote mint.</td></tr>
-</table>
-
-<h3>USD Enrichment</h3>
-<ul>
-  <li><strong>USDC, USDT, PYUSD</strong> are treated as $1.00.</li>
-  <li><strong>SOL</strong> is priced via the in-process oracle: Binance public ticker (primary), DexScreener (fallback). Refreshed at startup and then every <code>--sol-price-refresh-secs</code> (default 10 s).</li>
-  <li>When neither side is SOL nor a stable mint, <code>price_usd</code> and <code>amount_usd</code> are <code>null</code>. No external lookup is attempted, by design (zero deps, self-hosted).</li>
-</ul>
-
-<h3>Node.js Example</h3>
-<pre><code>import WebSocket from "ws";
-
-const ws = new WebSocket("ws://localhost:8080/swap-stream");
-
-ws.on("open", () =&gt; ws.send(JSON.stringify({
-  type: "subscribe",
-  filter: { min_amount_usd: 10 }
-})));
-
-ws.on("message", (raw) =&gt; {
-  const msg = JSON.parse(raw);
-  if (msg.type === "swap") {
-    console.log(
-      `${msg.dex} ${msg.input.ui_amount} ${msg.input.mint.slice(0,4)}... ` +
-      `-&gt; ${msg.output.ui_amount} ${msg.output.mint.slice(0,4)}... ` +
-      `$${msg.amount_usd}`
-    );
-  } else if (msg.type === "ping") {
-    ws.send(JSON.stringify({ type: "pong" }));
-  } else if (msg.type === "lagged") {
-    console.warn(`stream lagged: ${msg.skipped} swaps dropped for slow consumer`);
-  }
-});</code></pre>
-
-<h3>Disabling</h3>
-<p>Set <code>--swap-stream-enabled false</code> (or <code>SWAP_STREAM_ENABLED=false</code>) to disable the broadcast hub, parser, and SOL/USD oracle entirely. Saves a small amount of memory and the periodic background HTTP fetch.</p>
-
-<h3>Verified throughput</h3>
-<p class="muted">A 20-minute mainnet sample streamed <strong>340,613 swaps</strong> at <strong>283.84 swaps/sec sustained</strong> with <strong>99.1% USD coverage</strong>, zero broadcast lag, zero reconnects, and zero consumer errors. Server held steady at 16.6% CPU and ~300 MB RSS.</p>
-
-<!-- ═══ FEES ═══ -->
 <h2 id="fees">Fee Structure</h2>
-
 <table>
-<tr><th>Property</th><th>Value</th></tr>
-<tr><td>Router Program</td><td><code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code></td></tr>
-<tr><td>Platform Fee</td><td>0.5% (50 bps) on output token</td></tr>
-<tr><td>Integrator Share</td><td>70% of fee</td></tr>
-<tr><td>Protocol Share</td><td>30% of fee</td></tr>
-<tr><td>Upgrade Authority</td><td><code>none</code> (immutable)</td></tr>
+<tr><th></th><th></th></tr>
+<tr><td>Rate</td><td><code>fee_bps</code> in the router's config account; <code>0</code> = no fee, no fee accounts</td></tr>
+<tr><td>Side</td><td>output token, after the slippage check</td></tr>
+<tr><td>Split</td><td><code>referral_split_bps</code> to a whitelisted integrator, rest to the treasury</td></tr>
 </table>
+<p>The server reads the fee from the router named by <code>ROUTER_PROGRAM_ID</code> and reports it in every quote's <code>platform_fee</code>.</p>
 
-<p>Fees are always taken from the <strong>output token</strong> after the swap completes and slippage is verified. Collected in any SPL token — SOL, USDC, memecoins, Token-2022.</p>
-<p>Treasury + referral ATAs are auto-created on first swap per output mint (~0.002 SOL rent, paid by signer once).</p>
-
-<!-- ═══ ROUTER ═══ -->
 <h2 id="router">On-Chain Router</h2>
-<p>Every <code>POST /swap</code> transaction is wrapped in the flow-router CPI. The router program is <strong>immutable</strong> — upgrade authority has been permanently burned. No one can change the fee rate, treasury, or program logic.</p>
-
-<h3>How It Works</h3>
-<pre><code>User TX -> flow-router::swap
-  |-- Read config PDA (fee, treasury, split)
-  |-- Validate token program (SPL v1 or Token-2022)
-  |-- Execute N sequential DEX CPIs (1-5 hops)
-  |-- Verify final output >= min_amount_out
-  |-- Validate fee account owned by treasury
-  '-- Collect fee from output token</code></pre>
-
-<!-- ═══ INTEGRATORS ═══ -->
-<h2 id="integrators">Integrators</h2>
-<p>Earn <strong>70% of the 0.5% platform fee</strong> on every swap routed through your integration.</p>
-<ol>
-  <li>Contact the admin to get your wallet whitelisted</li>
-  <li>Set <code>referral_account</code> in your <code>config.toml</code></li>
-  <li>Fees accumulate in your wallet's ATAs automatically</li>
-</ol>
-
-<!-- ═══ DEXES ═══ -->
-<h2 id="dexes">Supported DEXes (21 pool types)</h2>
+<p>Source: <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a>. One instruction runs 1–5 DEX legs as CPIs, checks the final output against <code>min_amount_out</code>, and collects the fee with <code>TransferChecked</code> if one is configured.</p>
 <table>
-<tr><th>#</th><th>DEX</th><th>Type</th></tr>
-<tr><td>1</td><td>Raydium V4</td><td>Legacy AMM</td></tr>
-<tr><td>2</td><td>Raydium CPMM</td><td>Constant Product</td></tr>
-<tr><td>3</td><td>Raydium CLMM</td><td>Concentrated Liquidity</td></tr>
-<tr><td>4</td><td>Raydium LP</td><td>StableSwap</td></tr>
-<tr><td>5</td><td>PumpFun</td><td>Bonding Curve</td></tr>
-<tr><td>6</td><td>PumpFun AMM</td><td>Graduated AMM</td></tr>
-<tr><td>7</td><td>Orca Whirlpool</td><td>Concentrated Liquidity</td></tr>
-<tr><td>8</td><td>Meteora Standard</td><td>Constant Product</td></tr>
-<tr><td>9</td><td>Meteora DLMM</td><td>Dynamic LMM</td></tr>
-<tr><td>10</td><td>Meteora DAMM v2</td><td>Dynamic AMM</td></tr>
-<tr><td>11</td><td>Meteora DBC</td><td>Bonding Curve</td></tr>
-<tr><td>12</td><td>FluxBeam</td><td>SPL Token Swap</td></tr>
-<tr><td>13</td><td>DefiTuna Fusion</td><td>CLMM</td></tr>
-<tr><td>14</td><td>DefiTuna Pools</td><td>Position Manager</td></tr>
-<tr><td>15</td><td>Saros</td><td>SPL Token Swap</td></tr>
-<tr><td>16</td><td>Dooar</td><td>SPL Token Swap</td></tr>
-<tr><td>17</td><td>PancakeSwap</td><td>CLMM</td></tr>
-<tr><td>18</td><td>FlashTrade</td><td>Custom</td></tr>
-<tr><td>19</td><td>Byreal</td><td>CLMM</td></tr>
-<tr><td>20</td><td>Pumpup AMM</td><td>Constant Product (post-graduation)</td></tr>
-<tr><td>21</td><td>Pumpup Bonding</td><td>Bonding Curve (pre-graduation, native SOL)</td></tr>
+<tr><th>Generation</th><th>Program</th><th>Fee</th><th>Notes</th></tr>
+<tr><td>First</td><td><code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code></td><td>50 bps, 70/30</td><td>immutable; plain <code>Transfer</code>, so Token-2022 mints with extensions cannot be traded through it; audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a></td></tr>
+<tr><td>Second</td><td>built from <code>flow-router-solana</code></td><td>configurable, including 0</td><td><code>TransferChecked</code>; upgradeable</td></tr>
 </table>
-<p class="muted">Plus <strong>OnChain Labs DEX V2</strong> (<code>proVF4...</code>) — aggregator router into 80+ private MM venues. Discovery-only: pool addresses behind it are registered against their underlying DEXes by the block scanner; we do not quote or execute against the aggregator program itself.</p>
 
-<!-- ═══ PERFORMANCE ═══ -->
+<h2 id="integrators">Integrators</h2>
+<p>If the router charges a fee, a whitelisted integrator wallet receives <code>referral_split_bps</code> of it. Set <code>referral_account</code> to that wallet; the admin whitelists it with <code>add_integrator</code>.</p>
+
+<h2 id="dexes">Supported DEXes</h2>
+<table>
+<tr><th>Venue</th><th>Quoted</th></tr>
+<tr><td>Raydium CPMM, Raydium CLMM, Raydium LaunchLab, Orca Whirlpool, PancakeSwap, DefiTuna Fusion, Meteora DAMM v2, Meteora Standard, Dooar</td><td>yes, exact venue math</td></tr>
+<tr><td>pump.fun AMM</td><td>yes, exact curve and fee tiers</td></tr>
+<tr><td>Saros</td><td>yes, fee observed from its swaps</td></tr>
+<tr><td>Raydium V4, pump.fun bonding, Meteora DLMM, Meteora DBC, FluxBeam</td><td>streamed, not quoted</td></tr>
+<tr><td>Byreal</td><td>not quotable (Raydium CLMM fork, parser uses the Orca layout)</td></tr>
+<tr><td>FlashTrade, Pumpup AMM, Pumpup Bonding, DefiTuna Pools</td><td>stale</td></tr>
+<tr><td>OnChain Labs DEX V2</td><td>aggregator into private market makers; discovery only</td></tr>
+</table>
+
 <h2 id="performance">Performance</h2>
 <table>
 <tr><th>Metric</th><th>Value</th></tr>
-<tr><td>Quote latency</td><td><strong>0-block latency</strong></td></tr>
-<tr><td>Quote p99 (1000 iterations)</td><td><strong>47µs</strong></td></tr>
-<tr><td>Concurrent throughput</td><td><strong>29,359 quotes/sec</strong></td></tr>
-<tr><td>Full pipeline (quote -> IX -> TX)</td><td><strong>816µs avg</strong></td></tr>
-<tr><td>Pool discovery rate</td><td>~500 pools/min</td></tr>
-<tr><td>RPC calls (steady state)</td><td><strong>0</strong></td></tr>
-<tr><td>CPU</td><td>&lt;1%</td></tr>
-<tr><td>Memory</td><td>~35MB</td></tr>
+<tr><td><code>/quote</code>, warm, direct or multi-hop</td><td><strong>0.1–0.5 ms</strong> end to end</td></tr>
+<tr><td><code>/quote</code>, first quote of an unseen pair</td><td>0.5–2 s, then warm</td></tr>
+<tr><td>Quote engine, 300 pools</td><td>50 µs direct / 70 µs routed (p50)</td></tr>
+<tr><td><code>/swap</code> build</td><td>0.5–1.6 ms cached; 160–520 ms with RPC lookups</td></tr>
+<tr><td>Quote vs simulated output</td><td>0 bps on fresh state; ~5 bps multi-hop</td></tr>
+<tr><td>Swap stream</td><td>~110 swaps per slot</td></tr>
+<tr><td>Memory</td><td>~35 MB</td></tr>
 </table>
 
-<!-- ═══ ERRORS ═══ -->
 <h2 id="errors">Error Codes</h2>
-
-<h3>Router Errors (on-chain)</h3>
 <table>
-<tr><th>Code</th><th>Name</th><th>Description</th></tr>
-<tr><td>0</td><td>InvalidInstructionData</td><td>Bad instruction format</td></tr>
-<tr><td>1</td><td>SlippageExceeded</td><td>Output &lt; min_amount_out</td></tr>
-<tr><td>2</td><td>InvalidFeeBps</td><td>Fee &gt; 10000 bps</td></tr>
-<tr><td>3</td><td>BalanceReadFailed</td><td>Token account unreadable</td></tr>
-<tr><td>5</td><td>NotEnoughAccounts</td><td>Missing required accounts</td></tr>
-<tr><td>6</td><td>InvalidAccount</td><td>Wrong owner or discriminator</td></tr>
-<tr><td>7</td><td>AlreadyInitialized</td><td>Config/integrator PDA exists</td></tr>
-<tr><td>8</td><td>Unauthorized</td><td>Not admin or not whitelisted</td></tr>
+<tr><th>Router</th><th></th></tr>
+<tr><td>1</td><td>SlippageExceeded</td></tr>
+<tr><td>2</td><td>InvalidFeeBps</td></tr>
+<tr><td>5</td><td>NotEnoughAccounts</td></tr>
+<tr><td>6</td><td>InvalidAccount</td></tr>
+<tr><td>7</td><td>AlreadyInitialized</td></tr>
+<tr><td>8</td><td>Unauthorized</td></tr>
+</table>
+<table>
+<tr><th>API</th><th></th></tr>
+<tr><td>400</td><td>bad parameters, or a v0 transaction over 1,232 bytes (retry with <code>tx_version: 1</code>)</td></tr>
+<tr><td>404</td><td>no route</td></tr>
+<tr><td>500</td><td>router not configured, RPC failure</td></tr>
 </table>
 
-<h3>API Errors</h3>
-<table>
-<tr><th>Status</th><th>When</th></tr>
-<tr><td>400</td><td>Invalid parameters (bad mint, zero amount, same input/output)</td></tr>
-<tr><td>404</td><td>No route found for the given pair</td></tr>
-<tr><td>500</td><td>Router not configured, RPC failure, or internal error</td></tr>
-</table>
-
-<!-- ═══ SECURITY ═══ -->
 <h2 id="security">Security</h2>
-<p>The Flow router smart contract has been audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>.</p>
 <ul>
-  <li>Zero <code>unwrap()</code>, <code>expect()</code>, or <code>panic!()</code> in production code</li>
-  <li>35 explicit validation checks across all instructions</li>
-  <li>Upgrade authority permanently burned — program is immutable</li>
-  <li>Config PDA is write-once — fee rate, treasury, and split cannot be changed</li>
-  <li>All fee account ownership validated against treasury wallet on every swap</li>
-  <li>Token program explicitly validated (SPL Token v1 or Token-2022 only)</li>
+<li>The server never holds keys; <code>/swap</code> returns unsigned transactions</li>
+<li>Router: no panics, typed errors; write-once config; token program, output mint and fee-account owner validated; one slippage check on the final output</li>
+<li>First-generation router audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>; second generation tested natively against SPL Token and Token-2022</li>
 </ul>
 
-<!-- ═══ SOURCE CODE ═══ -->
 <h2 id="source">Source Code</h2>
-<p>The full Rust source for the Flow Trades server lives at <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-trades-solana-source</a>.</p>
-<p>The shipped binary in <a href="https://github.com/trueoriginlabs/flow-trades-binary/releases" target="_blank" rel="noopener">flow-trades-binary/releases</a> is built from that repo. You can:</p>
 <ul>
-  <li><strong>Audit it</strong> — 62 source files, ~20K lines of Rust, 561 unit tests + an extensive E2E suite</li>
-  <li><strong>Fork it</strong> — run your own variant on your own infrastructure</li>
-  <li><strong>Build it</strong> — <code>cargo build --release</code> against the published <code>Cargo.lock</code> reproduces the released binary</li>
+<li><a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-trades-solana</a> — server. <code>cargo build --release</code>, <code>cargo test --lib</code></li>
+<li><a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">github.com/trueoriginlabs/flow-router-solana</a> — router. <code>cargo test</code>, <code>cargo build-sbf</code></li>
 </ul>
-<p>The on-chain router program (immutable, audited) is referenced as <code>FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm</code> throughout the codebase.</p>
-
 </main>
 
 <script>

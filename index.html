@@ -263,7 +263,8 @@ footer {
     <div class="nav-links">
       <a href="docs.html">Docs</a>
       <a href="docs.html#api">API</a>
-      <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">Source</a>
+      <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">Router</a>
+      <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">Source</a>
       <a href="https://t.me/+3BPRvJoUvlViMzg1" target="_blank" rel="noopener" title="Telegram" style="display:flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
       <button class="theme-toggle" onclick="toggleTheme()">Light</button>
     </div>
@@ -273,11 +274,11 @@ footer {
 <section class="hero">
   <div class="hero-content">
     <h1>Self-hosted <span>Solana</span> swap API</h1>
-    <p>Direct AMM execution across 21 pool types. Geyser-native streaming. 0-block quote latency. Zero RPC on the hot path. Live <code style="color:var(--accent);font-family:var(--mono);font-size:0.95em;">/swap-stream</code> WebSocket broadcasting every confirmed DEX swap with native + USD prices. On-chain fee enforcement with an immutable router program.</p>
+    <p>21 pool types, priced with each venue's own math. Geyser or plain RPC. Sub-millisecond quotes. Live <code style="color:var(--accent);font-family:var(--mono);font-size:0.95em;">/swap-stream</code> WebSocket broadcasting every confirmed DEX swap with native + USD prices. On-chain fee enforcement with an immutable router program.</p>
 
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-value">0-block</div>
+        <div class="stat-value">&lt;1 ms</div>
         <div class="stat-label">Quote Latency</div>
       </div>
       <div class="stat">
@@ -285,15 +286,15 @@ footer {
         <div class="stat-label">Pool Types</div>
       </div>
       <div class="stat">
-        <div class="stat-value">280/s</div>
+        <div class="stat-value">~110/slot</div>
         <div class="stat-label">Swap Stream Rate</div>
       </div>
     </div>
 
     <div class="hero-buttons">
-      <a href="https://github.com/trueoriginlabs/flow-trades-binary/releases" class="btn btn-primary" target="_blank" rel="noopener">Download Binary</a>
+      <a href="https://github.com/trueoriginlabs/flow-trades-solana" class="btn btn-primary" target="_blank" rel="noopener">View Source</a>
+      <a href="https://github.com/trueoriginlabs/flow-router-solana" class="btn btn-secondary" target="_blank" rel="noopener">Router Program</a>
       <a href="docs.html" class="btn btn-secondary">Read the Docs</a>
-      <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" class="btn btn-secondary" target="_blank" rel="noopener">View Source</a>
     </div>
 
     <div class="code-block" style="margin-top:48px; text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">
@@ -311,17 +312,17 @@ amount=1000000000"
     <div class="feature-card">
       <div class="feature-icon">&#9889;</div>
       <h3>Geyser-Native Streaming</h3>
-      <p>Real-time pool state, vault balances, and blockhash via Yellowstone gRPC. Zero RPC calls in steady state.</p>
+      <p>Pool state, vault balances and tick arrays via Yellowstone gRPC, or from blocks over plain RPC. No RPC on the quote path.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">&#128279;</div>
       <h3>Generic N-Hop Routing</h3>
-      <p>1 to 5 hops in a single instruction. Direct, 2-hop through SOL/USDC, or complex multi-leg routes.</p>
+      <p>1 to 5 hops in one instruction, one slippage check on the final output.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">&#128274;</div>
-      <h3>On-Chain Security</h3>
-      <p>Immutable smart contract. Upgrade authority permanently burned. Audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>.</p>
+      <h3>On-Chain Router</h3>
+      <p>Every swap settles through the open-source <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router</a> program: sequential DEX CPIs, a route-level minimum, an optional output-token fee. First generation audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">&#128640;</div>
@@ -331,31 +332,31 @@ amount=1000000000"
     <div class="feature-card">
       <div class="feature-icon">&#128225;</div>
       <h3>Live Swap Stream</h3>
-      <p><code>WS /swap-stream</code> broadcasts every confirmed DEX swap with native + USD prices. Filter by DEX, mint, pool, or trade size. 283 swaps/sec sustained on mainnet.</p>
+      <p><code>WS /swap-stream</code> broadcasts every confirmed DEX swap with native + USD prices. Filter by DEX, mint, pool, or trade size. About 110 swaps per slot on mainnet.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">&#128736;</div>
-      <h3>Single Binary</h3>
-      <p>~23MB Linux binary. No Docker, no databases, no runtime dependencies. Just config.toml and go.</p>
+      <h3>Exact Venue Math</h3>
+      <p>Tick walks, bonding curves, vault shares, fee tiers: quotes match the program's output to the atom.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">&#128194;</div>
       <h3>Open Source</h3>
-      <p>Full Rust source published at <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">trueoriginlabs/flow-trades-solana-source</a>. Audit, fork, or build it yourself.</p>
+      <p>Server and router are MIT-licensed Rust: <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">flow-trades-solana</a> and <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a>. Build them yourself with <code>cargo build --release</code>.</p>
     </div>
   </div>
 </section>
 
 <section class="cta">
   <h2>Ready to integrate?</h2>
-  <p>Read the API docs, set up your Geyser endpoint, and start serving quotes in minutes.</p>
+  <p>Read the API docs, point the server at an RPC (and optionally a Geyser endpoint), and start serving quotes in minutes.</p>
   <a href="docs.html" class="btn btn-primary">Get Started</a>
 </section>
 
 <footer>
   Flow Trades v0.3.0 &mdash; Router: FLoWxxKoBrZtNj5NTPuy1tZcSU6Nnjtz7v5snrrUsNqm
-  <br>Open source: <a href="https://github.com/trueoriginlabs/flow-trades-solana-source" target="_blank" rel="noopener">trueoriginlabs/flow-trades-solana-source</a>
-  <br>Smart contract audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>
+  <br>Open source: <a href="https://github.com/trueoriginlabs/flow-trades-solana" target="_blank" rel="noopener">flow-trades-solana</a> · <a href="https://github.com/trueoriginlabs/flow-router-solana" target="_blank" rel="noopener">flow-router-solana</a>
+  <br>First-generation router audited by <a href="https://sigintzero.com/" target="_blank" rel="noopener">SigIntZero</a>
 </footer>
 
 <script>
